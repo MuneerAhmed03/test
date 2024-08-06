@@ -31,19 +31,18 @@ const defaultOptions: OGImageOptions = {
 };
 
 
-async function generateOGImage(post: Post, options: Partial<OGImageOptions> = {}): Promise<Buffer> {
-  const opts: OGImageOptions = { ...defaultOptions, ...options };
+async function generateOGImage(post: Post): Promise<Buffer> {
+  const opts: OGImageOptions = { ...defaultOptions};
   const canvas = createCanvas(opts.width, opts.height);
   const ctx = canvas.getContext('2d');
 
-  // Create gradient background
+
   const gradient = ctx.createLinearGradient(0, 0, opts.width, opts.height);
   gradient.addColorStop(0, opts.gradientStart);
   gradient.addColorStop(1, opts.gradientEnd);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, opts.width, opts.height);
 
-  // Top row: Logo and Title (flex-row, justify-start)
   const topRowY = 50;
   await addLogo(ctx, opts.logoPath, 50, topRowY, 80, 80);
   addText(ctx, "Medial", 150, topRowY + 50, opts.titleFont, '#666666', 1000);
@@ -87,36 +86,7 @@ async function addLogo(
   ctx.restore();
 }
 
-// function addText(
-//   ctx: CanvasRenderingContext2D,
-//   text: string,
-//   x: number,
-//   y: number,
-//   font: string,
-//   color: string,
-//   maxWidth: number
-// ): void {
-//   ctx.font = font;
-//   ctx.fillStyle = color;
-//   const words = text.split(' ');
-//   let line = '';
-//   let lineY = y;
 
-
-//   for (let n = 0; n < words.length; n++) {
-//     const testLine = line + words[n] + ' ';
-//     const metrics = ctx.measureText(testLine);
-//     const testWidth = metrics.width;
-//     if (testWidth > maxWidth && n > 0) {
-//       ctx.fillText(line, x, lineY);
-//       line = words[n] + ' ';
-//       lineY += 30;
-//     } else {
-//       line = testLine;
-//     }
-//   }
-//   ctx.fillText(line, x, lineY);
-// }
 
 function addText(
     ctx: CanvasRenderingContext2D,
@@ -162,29 +132,27 @@ async function addPostImage(
     cornerRadius: number = 20
   ): Promise<void> {
     const image = await loadImage(imagePath);
-    
-    // Calculate aspect ratios
+
     const containerAspectRatio = containerWidth / containerHeight;
     const imageAspectRatio = image.width / image.height;
-  
-    // Calculate dimensions to fit image within container while maintaining aspect ratio
+
     let drawWidth, drawHeight, drawX, drawY;
     
     if (imageAspectRatio > containerAspectRatio) {
-      // Image is wider than container
+
       drawWidth = containerWidth;
       drawHeight = containerWidth / imageAspectRatio;
       drawX = containerX;
       drawY = containerY + (containerHeight - drawHeight) / 2;
     } else {
-      // Image is taller than container
+
       drawHeight = containerHeight;
       drawWidth = containerHeight * imageAspectRatio;
       drawX = containerX + (containerWidth - drawWidth) / 2;
       drawY = containerY;
     }
   
-    // Save the current context state
+
     ctx.save();
     
     // Create a rounded rectangle path
