@@ -10,7 +10,8 @@ interface Post {
 interface OGImageOptions {
   width: number;
   height: number;
-  backgroundColor: string;
+  gradientStart: string;
+  gradientEnd: string;
   titleColor: string;
   contentColor: string;
   titleFont: string;
@@ -21,64 +22,240 @@ interface OGImageOptions {
 const defaultOptions: OGImageOptions = {
   width: 1200,
   height: 630,
-  backgroundColor: '#f0f0f0',
-  titleColor: '#333333',
-  contentColor: '#666666',
+  gradientStart: '#1c1917',
+  gradientEnd: '#172554',
+  titleColor: '#ffffff',
+  contentColor: '#e5e7eb',
   titleFont: 'bold 40px Arial',
   contentFont: '24px Arial',
-  logoPath: '',
+  logoPath: `https://avatars.githubusercontent.com/u/97833696?s=48&v=4`,
 };
+
 
 async function generateOGImage(post: Post, options: Partial<OGImageOptions> = {}): Promise<Buffer> {
   const opts: OGImageOptions = { ...defaultOptions, ...options };
   const canvas = createCanvas(opts.width, opts.height);
   const ctx = canvas.getContext('2d');
 
-  // Set background
-  ctx.fillStyle = opts.backgroundColor;
+  // Create gradient background
+  const gradient = ctx.createLinearGradient(0, 0, opts.width, opts.height);
+  gradient.addColorStop(0, opts.gradientStart);
+  gradient.addColorStop(1, opts.gradientEnd);
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, opts.width, opts.height);
 
-  // Add logo
-//   await addLogo(ctx, opts.logoPath);
+  // Top row: Logo and Title (flex-row, justify-start)
+  const topRowY = 50;
+  await addLogo(ctx, opts.logoPath, 50, topRowY, 80, 80);
+  addText(ctx, "Medial", 150, topRowY + 50, opts.titleFont, '#666666', 1000);
 
-  // Add title
+  if(post.title.length >50){
+    post.title = post.title.substring(0, 47) + ' ..';
+  }
   addText(ctx, post.title, 50, 200, opts.titleFont, opts.titleColor, 1100);
 
-  // Add content snippet
-  const contentSnippet = post.content.substring(0, 100) + '...';
-  addText(ctx, contentSnippet, 50, 250, opts.contentFont, opts.contentColor, 1100);
+  // Content row: Image (if available) and Content (flex-r  ow, justify-start)
+  const contentRowY =250;
+  const contentX = post.image ? 600 :50 ;
+  const contentWidth = post.image ? 500:1100;
 
-  // Add image if available
   if (post.image) {
-    await addPostImage(ctx, post.image);
+    await addPostImage(ctx, post.image, 50, 230, contentWidth - 50, 400);
   }
+
+  const contentSnippet = post.content.substring(0, 400) + '...';
+  addText(ctx, contentSnippet, contentX, contentRowY + 20, opts.contentFont, opts.contentColor, contentWidth);
 
   // Return the buffer
   return canvas.toBuffer('image/png');
 }
 
-async function addLogo(ctx: CanvasRenderingContext2D, logoPath: string): Promise<void> {
+async function addLogo(
+  ctx: CanvasRenderingContext2D, 
+  logoPath: string, 
+  x: number, 
+  y: number, 
+  width: number, 
+  height: number
+): Promise<void> {
   const logo = await loadImage(logoPath);
-  ctx.drawImage(logo, 50, 50, 100, 100);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(logo, x, y, width, height);
+  ctx.restore();
 }
+
+// function addText(
+//   ctx: CanvasRenderingContext2D,
+//   text: string,
+//   x: number,
+//   y: number,
+//   font: string,
+//   color: string,
+//   maxWidth: number
+// ): void {
+//   ctx.font = font;
+//   ctx.fillStyle = color;
+//   const words = text.split(' ');
+//   let line = '';
+//   let lineY = y;
+
+
+//   for (let n = 0; n < words.length; n++) {
+//     const testLine = line + words[n] + ' ';
+//     const metrics = ctx.measureText(testLine);
+//     const testWidth = metrics.width;
+//     if (testWidth > maxWidth && n > 0) {
+//       ctx.fillText(line, x, lineY);
+//       line = words[n] + ' ';
+//       lineY += 30;
+//     } else {
+//       line = testLine;
+//     }
+//   }
+//   ctx.fillText(line, x, lineY);
+// }
 
 function addText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  font: string,
-  color: string,
-  maxWidth: number
-): void {
-  ctx.font = font;
-  ctx.fillStyle = color;
-  ctx.fillText(text, x, y, maxWidth);
-}
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    font: string,
+    color: string,
+    maxWidth: number,
+  ): number {
+    ctx.font = font;
+    ctx.fillStyle = color;
+  
+    const words = text.split(' ');
+    let line = '';
+    let currentY = y;
+  
+    for (const word of words) {
+      const testLine = line + word + ' ';
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+  
+      if (testWidth > maxWidth && line !== '') {
+        ctx.fillText(line, x, currentY);
+        line = word + ' ';
+        currentY += parseInt(font, 10) * 1.5;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, x, currentY);
+  
+    return currentY;
+  }
+// async function addPostImage(
+//   ctx: CanvasRenderingContext2D, 
+//   imagePath: string, 
+//   x: number, 
+//   y: number, 
+//   width: number, 
+//   height: number
+// ): Promise<void> {
+//   const image = await loadImage(imagePath);
+//   ctx.drawImage(image, x, y, width, height);
+// }
 
-async function addPostImage(ctx: CanvasRenderingContext2D, imagePath: string): Promise<void> {
-  const image = await loadImage(imagePath);
-  ctx.drawImage(image, 600, 300, 550, 280);
-}
+// async function addPostImage(
+//     ctx: CanvasRenderingContext2D,
+//     imagePath: string,
+//     x: number,
+//     y: number,
+//     width: number,
+//     height: number,
+//     cornerRadius: number = 20
+//   ): Promise<void> {
+//     const image = await loadImage(imagePath);
+    
+//     // Save the current context state
+//     ctx.save();
+    
+//     // Create a rounded rectangle path
+//     ctx.beginPath();
+//     ctx.moveTo(x + cornerRadius, y);
+//     ctx.lineTo(x + width - cornerRadius, y);
+//     ctx.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
+//     ctx.lineTo(x + width, y + height - cornerRadius);
+//     ctx.quadraticCurveTo(x + width, y + height, x + width - cornerRadius, y + height);
+//     ctx.lineTo(x + cornerRadius, y + height);
+//     ctx.quadraticCurveTo(x, y + height, x, y + height - cornerRadius);
+//     ctx.lineTo(x, y + cornerRadius);
+//     ctx.quadraticCurveTo(x, y, x + cornerRadius, y);
+//     ctx.closePath();
+    
+//     // Clip to the current path
+//     ctx.clip();
+  
+//     // Draw the image
+//     ctx.drawImage(image, x, y, width, height);
+    
+//     // Restore the context state
+//     ctx.restore();
+//   }
 
+async function addPostImage(
+    ctx: CanvasRenderingContext2D,
+    imagePath: string,
+    containerX: number,
+    containerY: number,
+    containerWidth: number,
+    containerHeight: number,
+    cornerRadius: number = 20
+  ): Promise<void> {
+    const image = await loadImage(imagePath);
+    
+    // Calculate aspect ratios
+    const containerAspectRatio = containerWidth / containerHeight;
+    const imageAspectRatio = image.width / image.height;
+  
+    // Calculate dimensions to fit image within container while maintaining aspect ratio
+    let drawWidth, drawHeight, drawX, drawY;
+    
+    if (imageAspectRatio > containerAspectRatio) {
+      // Image is wider than container
+      drawWidth = containerWidth;
+      drawHeight = containerWidth / imageAspectRatio;
+      drawX = containerX;
+      drawY = containerY + (containerHeight - drawHeight) / 2;
+    } else {
+      // Image is taller than container
+      drawHeight = containerHeight;
+      drawWidth = containerHeight * imageAspectRatio;
+      drawX = containerX + (containerWidth - drawWidth) / 2;
+      drawY = containerY;
+    }
+  
+    // Save the current context state
+    ctx.save();
+    
+    // Create a rounded rectangle path
+    ctx.beginPath();
+    ctx.moveTo(drawX + cornerRadius, drawY);
+    ctx.lineTo(drawX + drawWidth - cornerRadius, drawY);
+    ctx.quadraticCurveTo(drawX + drawWidth, drawY, drawX + drawWidth, drawY + cornerRadius);
+    ctx.lineTo(drawX + drawWidth, drawY + drawHeight - cornerRadius);
+    ctx.quadraticCurveTo(drawX + drawWidth, drawY + drawHeight, drawX + drawWidth - cornerRadius, drawY + drawHeight);
+    ctx.lineTo(drawX + cornerRadius, drawY + drawHeight);
+    ctx.quadraticCurveTo(drawX, drawY + drawHeight, drawX, drawY + drawHeight - cornerRadius);
+    ctx.lineTo(drawX, drawY + cornerRadius);
+    ctx.quadraticCurveTo(drawX, drawY, drawX + cornerRadius, drawY);
+    ctx.closePath();
+    
+    // Clip to the current path
+    ctx.clip();
+  
+    // Draw the image
+    ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+    
+    // Restore the context state
+    ctx.restore();
+  }
 export default generateOGImage;

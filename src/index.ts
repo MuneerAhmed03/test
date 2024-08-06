@@ -5,7 +5,7 @@ import fs from 'fs';
 import generateOGImage from './utils/og';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(json());
@@ -29,7 +29,7 @@ app.post('/api/generate-og-image', async (req, res) => {
     }
 
     const imageBuffer = await generateOGImage(postData);
-    
+
     res.set('Transfer-Encoding','chunked')
     res.set('Content-Type', 'image/png');
     res.send(imageBuffer);
