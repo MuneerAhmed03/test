@@ -8,7 +8,7 @@ import NodeCache from 'node-cache';
 const cache = new NodeCache({ stdTTL: 3600 });
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 7000;
 
 // Middleware
 app.use(json());

@@ -52,6 +52,7 @@ async function generateOGImage(post: Post): Promise<Buffer> {
   const topRowY = 50;
   const logo = await logoPromise;
   ctx.drawImage(logo, 50, 50, 80, 80);
+  await addLogo(ctx, logo, 50, topRowY, 80, 80);
   addText(ctx, "Medial", 150, topRowY + 50, opts.titleFont, '#666666', 1000);
 
   if(post.title.length >50){
@@ -78,13 +79,13 @@ async function generateOGImage(post: Post): Promise<Buffer> {
 
 async function addLogo(
   ctx: CanvasRenderingContext2D, 
-  logoPath: string, 
+  logo: Image, 
   x: number, 
   y: number, 
   width: number, 
   height: number
 ): Promise<void> {
-  const logo = await loadImage(logoPath);
+;
   ctx.save();
   ctx.beginPath();
   ctx.arc(x + width / 2, y + height / 2, width / 2, 0, Math.PI * 2);
