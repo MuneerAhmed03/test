@@ -22,7 +22,7 @@ interface PostData {
 }
 
 // Route to generate OG image
-app.post('/api/generate-og-image', async (req, res) => {
+app.get('/api/generate-og-image', async (req, res) => {
   try {
     const postData: PostData = {
         title: req.query.title as string,
