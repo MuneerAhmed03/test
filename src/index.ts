@@ -3,6 +3,9 @@ import { json } from 'body-parser';
 import path from 'path';
 import fs from 'fs';
 import generateOGImage from './utils/og';
+import NodeCache from 'node-cache';
+
+const cache = new NodeCache({ stdTTL: 3600 });
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -30,9 +33,13 @@ app.post('/api/generate-og-image', async (req, res) => {
     if (!postData.title || !postData.content) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-
-    const imageBuffer = await generateOGImage(postData);
-
+    const cacheKey = `og-image-${postData.title}-${postData.content}-${postData.image}`;
+    let imageBuffer = cache.get(cacheKey) as Buffer | undefined;
+    
+    if (!imageBuffer) {
+        imageBuffer = await generateOGImage(postData);
+        cache.set(cacheKey, imageBuffer);
+      }
     res.set('Transfer-Encoding','chunked')
     res.set('Content-Type', 'image/png');
     res.send(imageBuffer);
@@ -42,6 +49,12 @@ app.post('/api/generate-og-image', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate OG image' });
   }
 });
+
+app.get('/ping', (req, res) => {
+  console.log('Ping received at', new Date().toISOString());
+  res.status(200).send('pong');
+});
+
 
 // Start the server
 app.listen(port, () => {

@@ -30,6 +30,15 @@ const defaultOptions: OGImageOptions = {
   logoPath: `https://avatars.githubusercontent.com/u/97833696?v=4`,
 };
 
+// Preload logo
+const logoPromise = loadImage(defaultOptions.logoPath);
+
+// Pre-create gradient
+const gradientCanvas = createCanvas(1, 1);
+const gradientCtx = gradientCanvas.getContext('2d');
+const gradient = gradientCtx.createLinearGradient(0, 0, defaultOptions.width, defaultOptions.height);
+gradient.addColorStop(0, defaultOptions.gradientStart);
+gradient.addColorStop(1, defaultOptions.gradientEnd);
 
 async function generateOGImage(post: Post): Promise<Buffer> {
   const opts: OGImageOptions = { ...defaultOptions};
@@ -37,14 +46,12 @@ async function generateOGImage(post: Post): Promise<Buffer> {
   const ctx = canvas.getContext('2d');
 
 
-  const gradient = ctx.createLinearGradient(0, 0, opts.width, opts.height);
-  gradient.addColorStop(0, opts.gradientStart);
-  gradient.addColorStop(1, opts.gradientEnd);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, opts.width, opts.height);
 
   const topRowY = 50;
-  await addLogo(ctx, opts.logoPath, 50, topRowY, 80, 80);
+  const logo = await logoPromise;
+  ctx.drawImage(logo, 50, 50, 80, 80);
   addText(ctx, "Medial", 150, topRowY + 50, opts.titleFont, '#666666', 1000);
 
   if(post.title.length >50){
@@ -66,6 +73,7 @@ async function generateOGImage(post: Post): Promise<Buffer> {
 
   // Return the buffer
   return canvas.toBuffer('image/png');
+
 }
 
 async function addLogo(
