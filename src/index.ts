@@ -13,7 +13,6 @@ app.use(json());
 
 // Types
 interface PostData {
-  id: string;
   title: string;
   content: string;
   image?: string;
@@ -22,9 +21,13 @@ interface PostData {
 // Route to generate OG image
 app.post('/api/generate-og-image', async (req, res) => {
   try {
-    const postData: PostData = req.body;
+    const postData: PostData = {
+        title: req.query.title as string,
+        content: req.query.content as string,
+        image: req.query.image as string | undefined,
+      };
     
-    if (!postData.id || !postData.title || !postData.content) {
+    if (!postData.title || !postData.content) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 

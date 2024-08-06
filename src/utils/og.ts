@@ -1,7 +1,6 @@
 import { createCanvas, loadImage, CanvasRenderingContext2D, Image } from 'canvas';
 
 interface Post {
-  id: string;
   title: string;
   content: string;
   image?: string;
@@ -28,7 +27,7 @@ const defaultOptions: OGImageOptions = {
   contentColor: '#e5e7eb',
   titleFont: 'bold 40px Arial',
   contentFont: '24px Arial',
-  logoPath: `https://avatars.githubusercontent.com/u/97833696?s=48&v=4`,
+  logoPath: `https://avatars.githubusercontent.com/u/97833696?v=4`,
 };
 
 
@@ -152,54 +151,6 @@ function addText(
   
     return currentY;
   }
-// async function addPostImage(
-//   ctx: CanvasRenderingContext2D, 
-//   imagePath: string, 
-//   x: number, 
-//   y: number, 
-//   width: number, 
-//   height: number
-// ): Promise<void> {
-//   const image = await loadImage(imagePath);
-//   ctx.drawImage(image, x, y, width, height);
-// }
-
-// async function addPostImage(
-//     ctx: CanvasRenderingContext2D,
-//     imagePath: string,
-//     x: number,
-//     y: number,
-//     width: number,
-//     height: number,
-//     cornerRadius: number = 20
-//   ): Promise<void> {
-//     const image = await loadImage(imagePath);
-    
-//     // Save the current context state
-//     ctx.save();
-    
-//     // Create a rounded rectangle path
-//     ctx.beginPath();
-//     ctx.moveTo(x + cornerRadius, y);
-//     ctx.lineTo(x + width - cornerRadius, y);
-//     ctx.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
-//     ctx.lineTo(x + width, y + height - cornerRadius);
-//     ctx.quadraticCurveTo(x + width, y + height, x + width - cornerRadius, y + height);
-//     ctx.lineTo(x + cornerRadius, y + height);
-//     ctx.quadraticCurveTo(x, y + height, x, y + height - cornerRadius);
-//     ctx.lineTo(x, y + cornerRadius);
-//     ctx.quadraticCurveTo(x, y, x + cornerRadius, y);
-//     ctx.closePath();
-    
-//     // Clip to the current path
-//     ctx.clip();
-  
-//     // Draw the image
-//     ctx.drawImage(image, x, y, width, height);
-    
-//     // Restore the context state
-//     ctx.restore();
-//   }
 
 async function addPostImage(
     ctx: CanvasRenderingContext2D,
